@@ -391,10 +391,23 @@ final class Engine {
             saveChannels()
             log("проверка: живых \(alive.count), удалено мёртвых \(deadCount)")
             startLocked()  // пересобрать конфиг без мёртвых
+            lastError = ""
         } else {
             log("проверка: живых \(alive.count) из \(channels.count)")
+            if alive.isEmpty {
+                lastError = "живых каналов 0 — публичные списки с этой сети не отвечают"
+                // не резать весь интернет мёртвым SOCKS
+                if settings.systemProxyOn {
+                    settings.systemProxyOn = false
+                    settings.save()
+                    DispatchQueue.global().async { _ = SystemProxy.set(on: false) }
+                    log("системный прокси выключен: 0 живых каналов")
+                    lastError += "; СИСТ. ПРОКСИ выключен"
+                }
+            } else {
+                lastError = ""
+            }
         }
-        lastError = ""
         refreshNowLocked()
         changed()
         checkIP()

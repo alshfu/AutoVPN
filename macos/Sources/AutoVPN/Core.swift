@@ -180,33 +180,41 @@ func run(_ cmd: String, _ args: [String], timeout: TimeInterval = 30) -> String 
     return String(data: data, encoding: .utf8) ?? ""
 }
 
-/// URLSession без системного SOCKS — иначе при включённом «СИСТ. ПРОКСИ»
-/// качание подписок идёт через наш же туннель и при мёртвых каналах ломается в ноль.
+/// URLSession без системного SOCKS (для localhost API).
 let directSession: URLSession = {
     let cfg = URLSessionConfiguration.ephemeral
     cfg.timeoutIntervalForRequest = 35
     cfg.timeoutIntervalForResource = 60
-    cfg.connectionProxyDictionary = [
-        "HTTPEnable": 0,
-        "HTTPSEnable": 0,
-        "SOCKSEnable": 0,
-        "ProxyAutoConfigEnable": 0,
-    ]
+    // пустой словарь = не брать системный прокси (nil = брать)
+    cfg.connectionProxyDictionary = [:]
     return URLSession(configuration: cfg)
 }()
 
+/// Скачать URL минуя системный SOCKS. curl --noproxy надёжнее URLSession:
+/// при «СИСТ. ПРОКСИ» + мёртвом туннеле иначе подписки всегда = 0.
 func httpGet(_ urlString: String, timeout: TimeInterval = 20, headers: [String: String] = [:]) -> Data? {
-    guard let url = URL(string: urlString) else { return nil }
-    var req = URLRequest(url: url, timeoutInterval: timeout)
-    for (k, v) in headers { req.setValue(v, forHTTPHeaderField: k) }
-    var result: Data?
-    let sem = DispatchSemaphore(value: 0)
-    directSession.dataTask(with: req) { data, resp, _ in
-        if let r = resp as? HTTPURLResponse, (200..<300).contains(r.statusCode) { result = data }
-        sem.signal()
-    }.resume()
-    _ = sem.wait(timeout: .now() + timeout + 5)
-    return result
+    let tmp = supportDir.appendingPathComponent("fetch-\(UUID().uuidString).tmp")
+    defer { try? FileManager.default.removeItem(at: tmp) }
+    var args = [
+        "-fsSL", "-m", "\(max(1, Int(timeout)))",
+        "--noproxy", "*",
+        "-o", tmp.path,
+        "-w", "%{http_code}",
+    ]
+    for (k, v) in headers {
+        args += ["-H", "\(k): \(v)"]
+    }
+    args.append(urlString)
+    let code = run("/usr/bin/curl", args, timeout: timeout + 5)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    guard code.hasPrefix("2"),
+          let data = try? Data(contentsOf: tmp), !data.isEmpty else {
+        if !code.isEmpty && code != "000" {
+            log("httpGet \(urlString.prefix(60))… → HTTP \(code)")
+        }
+        return nil
+    }
+    return data
 }
 
 func fetchSubscription(_ urlString: String) -> [String] {
