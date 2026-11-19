@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoVPN</title>
+<style>
+:root{
+  --bg0:#07070f; --bg1:#0d0a1f; --card:#11101f; --line:#232138;
+  --cyan:#22d3ee; --violet:#a78bfa; --green:#34d399; --amber:#fbbf24;
+  --red:#f87171; --dim:#6b6a85; --fg:#e7e6f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:radial-gradient(1200px 600px at 20% -10%, #1b1038 0%, transparent 60%),
+             radial-gradient(900px 500px at 110% 20%, #0b2740 0%, transparent 55%),
+             var(--bg0);
+  color:var(--fg); font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  min-height:100vh; padding:24px 16px 40px;
+}
+.wrap{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.hdr{display:flex;justify-content:space-between;align-items:baseline}
+.logo{font-weight:900;font-size:19px;letter-spacing:4px;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{font-size:9px;color:var(--dim);letter-spacing:1px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 40%),var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:14px}
+.status{display:flex;gap:14px;align-items:center}
+.orb{width:54px;height:54px;border-radius:50%;flex:none;display:flex;align-items:center;
+  justify-content:center;font-size:22px;border:2px solid var(--line);color:var(--dim);
+  transition:all .4s}
+.on .orb{border-color:var(--green);color:var(--green);
+  box-shadow:0 0 22px rgba(52,211,153,.45),inset 0 0 14px rgba(52,211,153,.25)}
+.mid .orb{border-color:var(--amber);color:var(--amber);
+  box-shadow:0 0 18px rgba(251,191,36,.35)}
+.st-title{font-weight:800;letter-spacing:2px;font-size:13px;color:var(--dim)}
+.on .st-title{color:var(--green)} .mid .st-title{color:var(--amber)}
+.st-sub{font-size:11px;margin-top:4px;word-break:break-all}
+.st-dim{font-size:10px;color:var(--dim);margin-top:3px}
+.ms{color:var(--green)} .err{color:var(--red);font-size:10px;margin-top:4px}
+.busy{color:var(--amber);font-size:10px;margin-top:4px}
+.btn-main{display:block;width:100%;border:0;border-radius:999px;padding:13px;
+  font:inherit;font-weight:900;letter-spacing:3px;font-size:13px;cursor:pointer;
+  color:#041018;background:linear-gradient(90deg,var(--cyan),var(--violet));
+  box-shadow:0 0 24px rgba(34,211,238,.25)}
+.btn-main.off{background:#1a1930;color:var(--fg);box-shadow:none;border:1px solid var(--line)}
+.toggles{display:flex;gap:10px}
+.tgl{flex:1;border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center;
+  font-size:10px;letter-spacing:1px;color:var(--dim);cursor:pointer;user-select:none}
+.tgl.on{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(34,211,238,.2)}
+.sec-t{font-size:11px;letter-spacing:2px;color:var(--cyan);font-weight:800;
+  display:flex;justify-content:space-between;margin-bottom:10px}
+.sec-t small{color:var(--dim);font-weight:400;letter-spacing:0}
+.row{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:8px;
+  font-size:11px;cursor:pointer}
+.row:hover{background:rgba(255,255,255,.03)}
+.row.sel{background:rgba(34,211,238,.08)}
+.dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--dim);flex:none}
+.row.sel .dot{background:var(--cyan);border-color:var(--cyan)}
+.rtag{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:3px;border-radius:2px;background:var(--green);opacity:.85}
+.rms{color:var(--green);font-size:10px;width:36px;text-align:right;flex:none}
+.sub{display:flex;align-items:center;gap:8px;padding:7px 4px;font-size:11px}
+.sub .nm{font-weight:700}
+.sub .u{font-size:9px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sdot{width:9px;height:9px;border-radius:50%;flex:none;cursor:pointer;
+  border:1.5px solid var(--dim)}
+.sdot.on{background:var(--green);border-color:var(--green)}
+.x{color:var(--dim);cursor:pointer;padding:0 4px}
+.x:hover{color:var(--red)}
+.addrow{display:flex;gap:8px;margin-top:8px}
+.addrow input{flex:1;background:#0b0a18;border:1px solid var(--line);border-radius:999px;
+  color:var(--fg);font:inherit;font-size:11px;padding:8px 14px;outline:none}
+.addrow input:focus{border-color:var(--cyan)}
+.plus{width:34px;height:34px;border-radius:50%;border:1px solid var(--cyan);background:none;
+  color:var(--cyan);font-size:16px;cursor:pointer;flex:none}
+.presets-t{font-size:10px;color:var(--violet);letter-spacing:1px;cursor:pointer;
+  margin-top:10px;user-select:none}
+.preset{display:flex;align-items:center;gap:8px;padding:7px 4px;font-size:11px}
+.preset .note{font-size:9px;color:var(--dim)}
+.padd{width:26px;height:26px;border-radius:50%;border:1px solid var(--violet);
+  background:none;color:var(--violet);cursor:pointer;flex:none;font-size:13px}
+.padd.have{border-color:var(--green);color:var(--green);cursor:default}
+.foot{display:flex;gap:8px}
+.fbtn{flex:1;background:#14132a;border:1px solid var(--line);border-radius:10px;
+  color:var(--fg);font:inherit;font-size:10px;letter-spacing:1px;padding:10px 4px;cursor:pointer}
+.fbtn:hover{border-color:var(--cyan)}
+#logbox{display:none;position:fixed;inset:0;background:rgba(4,4,10,.92);padding:24px;z-index:9}
+#logbox pre{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px;font-size:10px;line-height:1.6;height:85vh;overflow:auto;white-space:pre-wrap}
+#logbox .fbtn{margin-top:10px;max-width:200px}
+.hint{font-size:9px;color:var(--dim);margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr"><div class="logo">AUTO//VPN</div><div class="tag">fastest channel wins</div></div>
+
+  <div class="card status" id="stcard">
+    <div class="orb" id="orb">⚡</div>
+    <div style="flex:1;min-width:0">
+      <div class="st-title" id="sttitle">ОТКЛЮЧЕНО</div>
+      <div class="st-sub" id="stchan"></div>
+      <div class="st-dim" id="stip"></div>
+      <div class="busy" id="stbusy"></div>
+      <div class="err" id="sterr"></div>
+    </div>
+  </div>
+
+  <button class="btn-main off" id="mainbtn" onclick="toggleConn()">ПОДКЛЮЧИТЬ</button>
+
+  <div class="toggles">
+    <div class="tgl" id="tglproxy" onclick="toggleProxy()">● СИСТ. ПРОКСИ</div>
+    <div class="tgl" id="tglauto" onclick="toggleAutostart()">● АВТОЗАПУСК</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-t">КАНАЛЫ <small id="chcount"></small></div>
+    <div id="chlist"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-t">СПИСКИ <small id="rufl"></small></div>
+    <div id="sublist"></div>
+    <div class="addrow">
+      <input id="addurl" placeholder="https://… свой список vless" spellcheck="false">
+      <button class="plus" onclick="addSub()">+</button>
+    </div>
+    <div class="presets-t" id="ptog" onclick="pOpen=!pOpen;render(last)">&rsaquo; ТОП-5 ПОПУЛЯРНЫХ</div>
+    <div id="plist" style="display:none"></div>
+    <div class="hint">SOCKS/HTTP-прокси: 127.0.0.1:<span id="pport">2080</span></div>
+  </div>
+
+  <div class="foot">
+    <button class="fbtn" onclick="post('/api/probe')">ПРОВЕРИТЬ</button>
+    <button class="fbtn" onclick="post('/api/refresh')">ОБНОВИТЬ</button>
+    <button class="fbtn" onclick="showLog()">ЛОГ</button>
+    <button class="fbtn" onclick="quit()">ВЫХОД</button>
+  </div>
+</div>
+
+<div id="logbox" onclick="this.style.display='none'">
+  <pre id="logpre"></pre>
+  <button class="fbtn">ЗАКРЫТЬ</button>
+</div>
+
+<script>
+let last=null, pOpen=false;
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+async function post(p,body){try{await fetch(p,{method:'POST',body:JSON.stringify(body||{})});}catch(e){} setTimeout(tick,400);}
+
+function toggleConn(){ post(last&&last.running?'/api/disconnect':'/api/connect'); }
+async function toggleProxy(){
+  const r=await (await fetch('/api/sysproxy',{method:'POST',
+    body:JSON.stringify({on:last&&last.sysProxy?'0':'1'})})).json();
+  if(!r.ok) alert(r.error||'не вышло'); tick();
+}
+async function toggleAutostart(){
+  const r=await (await fetch('/api/autostart',{method:'POST',
+    body:JSON.stringify({on:last&&last.autostart?'0':'1'})})).json();
+  if(!r.ok) alert(r.error||'не вышло'); tick();
+}
+function addSub(){const u=$('addurl').value.trim(); if(!u)return;
+  $('addurl').value=''; post('/api/subs/add',{url:u});}
+function addPreset(u,n){post('/api/subs/add',{url:u,name:n});}
+async function showLog(){
+  const r=await (await fetch('/api/log')).json();
+  $('logpre').textContent=r.lines.join('\n')||'пусто';
+  $('logbox').style.display='block';
+  $('logpre').scrollTop=1e9;
+}
+function quit(){ if(confirm('Остановить AutoVPN?')) post('/api/quit'); }
+
+function render(s){
+  if(!s)return; last=s;
+  const connected=s.running&&s.failCount<2&&s.now;
+  const cls=connected?'on':(s.running?'mid':'');
+  $('stcard').className='card status '+cls;
+  $('sttitle').textContent=connected?'ПОДКЛЮЧЕНО':(s.running?'ПЕРЕКЛЮЧАЮСЬ':'ОТКЛЮЧЕНО');
+  const d=s.channels.find(c=>c.tag===s.now);
+  $('stchan').innerHTML=s.now?esc(s.now)+(d&&d.delay?' <span class="ms">'+d.delay+' мс</span>':''):'';
+  $('stip').textContent=s.ip?'IP: '+s.ip:'';
+  $('stbusy').textContent=s.busy||'';
+  $('sterr').textContent=s.error||'';
+  const b=$('mainbtn');
+  b.textContent=s.running?'ОТКЛЮЧИТЬ':'ПОДКЛЮЧИТЬ';
+  b.className='btn-main'+(s.running?' off':'');
+  $('tglproxy').className='tgl'+(s.sysProxy?' on':'');
+  $('tglauto').className='tgl'+(s.autostart?' on':'');
+  $('pport').textContent=s.proxyPort;
+  $('rufl').textContent='RU-фильтр: '+(s.skipRU?'вкл':'выкл');
+  $('chcount').textContent=s.channels.length+' / живых '+s.aliveCount;
+
+  let h='<div class="row'+(s.selected==='auto'?' sel':'')+'" onclick="post(\'/api/select\',{tag:\'auto\'})">'+
+        '<div class="dot"></div><div class="rtag">АВТО — самый быстрый</div></div>';
+  const alive=s.channels.filter(c=>c.delay>0).slice(0,20);
+  const max=alive.length?Math.max(...alive.map(c=>c.delay)):1;
+  for(const c of alive){
+    const w=Math.max(8,Math.round(70*(1-c.delay/max*0.8)));
+    h+='<div class="row'+(s.selected===c.tag?' sel':'')+'" onclick=\'post("/api/select",{tag:'+JSON.stringify(c.tag)+'})\'>'+
+       '<div class="dot"></div><div class="rtag">'+esc(c.tag)+'</div>'+
+       '<div class="bar" style="width:'+w+'px"></div><div class="rms">'+c.delay+'</div></div>';
+  }
+  if(!alive.length) h+='<div class="hint">нажми «Проверить» или «Обновить»</div>';
+  $('chlist').innerHTML=h;
+
+  let sh='';
+  for(const x of s.subs){
+    sh+='<div class="sub"><div class="sdot'+(x.enabled?' on':'')+'" onclick=\'post("/api/subs/toggle",{url:'+JSON.stringify(x.url)+'})\'></div>'+
+        '<div style="flex:1;min-width:0"><div class="nm">'+esc(x.name)+'</div><div class="u">'+esc(x.url.replace(/^https?:\/\//,''))+'</div></div>'+
+        '<div class="x" onclick=\'post("/api/subs/remove",{url:'+JSON.stringify(x.url)+'})\'>×</div></div>';
+  }
+  $('sublist').innerHTML=sh||'<div class="hint">добавь URL списка или возьми из топ-5 ниже</div>';
+
+  $('ptog').innerHTML=(pOpen?'&#8964; ':'&rsaquo; ')+'ТОП-5 ПОПУЛЯРНЫХ';
+  $('plist').style.display=pOpen?'block':'none';
+  if(pOpen){
+    let ph='';
+    for(const p of s.presets){
+      const have=s.subs.some(x=>x.url===p.url);
+      ph+='<div class="preset"><div style="flex:1"><div class="nm">'+esc(p.name)+'</div>'+
+          '<div class="note">'+esc(p.note)+'</div></div>'+
+          (have?'<button class="padd have">✓</button>'
+               :'<button class="padd" onclick=\'addPreset('+JSON.stringify(p.url)+','+JSON.stringify(p.name)+')\'>+</button>')+
+          '</div>';
+    }
+    $('plist').innerHTML=ph;
+  }
+}
+
+async function tick(){
+  try{ render(await (await fetch('/api/state')).json()); }catch(e){}
+}
+tick(); setInterval(tick,2000);
+$('addurl').addEventListener('keydown',e=>{if(e.key==='Enter')addSub();});
+</script>
+</body>
+</html>
