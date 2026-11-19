@@ -1,5 +1,7 @@
 # ⚡ AutoVPN
 
+**Русский** | [English](README.en.md) | [Сайт проекта](https://alshfu.github.io/AutoVPN/)
+
 **Самонаводящийся VPN-клиент для macOS, Windows и Linux.** Добавляешь подписку с VLESS-ссылками — он сам находит живые серверы, подключается через самый быстрый и сам себя чинит. Ноль настроек, ноль ручного перебора каналов.
 
 ![macOS 13+](https://img.shields.io/badge/macOS-13%2B-black?logo=apple)

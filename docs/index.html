@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoVPN — fastest channel wins</title>
+<meta name="description" content="Самонаводящийся VPN-клиент для macOS, Windows и Linux. Добавь VLESS-список — он сам найдёт живые серверы и подключится через самый быстрый.">
+<style>
+:root{
+  --bg0:#07070f; --card:#11101f; --line:#232138;
+  --cyan:#22d3ee; --violet:#a78bfa; --green:#34d399; --dim:#6b6a85; --fg:#e7e6f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:radial-gradient(1400px 700px at 20% -10%, #1b1038 0%, transparent 60%),
+             radial-gradient(1000px 600px at 110% 15%, #0b2740 0%, transparent 55%),
+             var(--bg0);
+  color:var(--fg); font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  line-height:1.6; padding:0 16px;
+}
+.wrap{max-width:960px;margin:0 auto}
+header{padding:70px 0 30px;text-align:center}
+.logo{font-weight:900;font-size:clamp(34px,7vw,56px);letter-spacing:8px;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{color:var(--dim);letter-spacing:3px;font-size:12px;margin-top:10px;text-transform:uppercase}
+.lead{max-width:640px;margin:26px auto 0;font-size:15px}
+.lead b{color:var(--cyan)}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:34px 0 0}
+.btn{display:inline-block;padding:13px 26px;border-radius:999px;text-decoration:none;
+  font-weight:800;letter-spacing:2px;font-size:12px}
+.btn.main{color:#041018;background:linear-gradient(90deg,var(--cyan),var(--violet));
+  box-shadow:0 0 28px rgba(34,211,238,.3)}
+.btn.ghost{color:var(--fg);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--cyan)}
+.shots{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin:60px 0}
+.shots img{width:min(340px,100%);border-radius:18px;border:1px solid var(--line);
+  box-shadow:0 20px 60px rgba(0,0,0,.5)}
+h2{font-size:14px;letter-spacing:3px;color:var(--cyan);margin:70px 0 24px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 40%),var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:20px}
+.card h3{font-size:13px;margin-bottom:8px}
+.card p{font-size:12px;color:var(--dim)}
+pre{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:22px;font-size:12px;overflow-x:auto;color:var(--green);line-height:1.8}
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.dl a{display:block;text-decoration:none;color:var(--fg);background:var(--card);
+  border:1px solid var(--line);border-radius:16px;padding:18px 20px;transition:border-color .2s}
+.dl a:hover{border-color:var(--cyan)}
+.dl .os{font-weight:800;font-size:13px}
+.dl .f{font-size:10px;color:var(--dim);margin-top:4px;word-break:break-all}
+.note{font-size:11px;color:var(--dim);text-align:center;margin-top:16px}
+.note code{color:var(--violet)}
+footer{text-align:center;padding:70px 0 40px;font-size:11px;color:var(--dim)}
+footer a{color:var(--cyan);text-decoration:none}
+.en{color:var(--dim);font-size:12px;max-width:640px;margin:14px auto 0}
+@media (prefers-color-scheme: light){ body{} } /* дизайн всегда тёмный — это фича */
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">AUTO//VPN</div>
+  <div class="tagline">fastest channel wins</div>
+  <p class="lead">Самонаводящийся VPN-клиент для <b>macOS</b>, <b>Windows</b> и <b>Linux</b>.
+  Добавляешь список VLESS-серверов — он сам находит живые, подключается через самый быстрый
+  и сам себя чинит.</p>
+  <p class="en">Self-healing VPN client. Feed it VLESS subscription lists — it probes every
+  server, connects through the fastest one and keeps healing itself.</p>
+  <div class="btns">
+    <a class="btn main" href="#download">СКАЧАТЬ</a>
+    <a class="btn ghost" href="https://github.com/alshfu/AutoVPN">GITHUB</a>
+  </div>
+</header>
+
+<div class="shots">
+  <img src="screenshot.png" alt="AutoVPN для macOS — menu-bar приложение">
+  <img src="screenshot-desktop.png" alt="AutoVPN для Windows и Linux — веб-панель">
+</div>
+
+<h2>// КАК ЭТО РАБОТАЕТ</h2>
+<pre>
+подписки ──► фильтр (tls/reality, мусор мимо) ──► выборка до 400
+                                                      │
+    самолечение ◄── удаление мёртвых ◄── замер всех ◄─┘
+         │
+         └─► всегда подключён через самый быстрый живой канал
+</pre>
+
+<h2>// ВОЗМОЖНОСТИ</h2>
+<div class="grid">
+  <div class="card"><h3>🚀 Авто-отбор</h3><p>urltest-группа sing-box сама выбирает быстрейший сервер и мгновенно переключается, когда он падает.</p></div>
+  <div class="card"><h3>💀 Чистка мёртвых</h3><p>Каналы без отклика удаляются. Предохранитель: если умерли все разом — это сбой сети, ничего не трогаем.</p></div>
+  <div class="card"><h3>🏥 Самолечение</h3><p>Живых меньше четырёх или туннель упал — подписки перекачиваются автоматически.</p></div>
+  <div class="card"><h3>📋 Списки</h3><p>Свои URL-подписки плюс пять вшитых популярных публичных списков. Включай, выключай, комбинируй.</p></div>
+  <div class="card"><h3>🖥 Системный прокси</h3><p>Одна кнопка — и весь трафик системы идёт через туннель. networksetup, реестр WinINET или gsettings.</p></div>
+  <div class="card"><h3>🧬 Нативно</h3><p>Swift для macOS, Go для Windows и Linux. Один бинарник ~7 МБ. Без Electron, без Python, без зависимостей.</p></div>
+</div>
+
+<h2 id="download">// СКАЧАТЬ</h2>
+<div class="dl">
+  <a href="https://github.com/alshfu/AutoVPN/releases/latest/download/AutoVPN.app.zip">
+    <div class="os"> macOS 13+</div><div class="f">AutoVPN.app.zip — menu-bar приложение<br>первый запуск: правый клик → «Открыть»</div></a>
+  <a href="https://github.com/alshfu/AutoVPN/releases/latest/download/autovpn-windows-amd64.exe">
+    <div class="os">🪟 Windows 10+</div><div class="f">autovpn-windows-amd64.exe — запустил, панель открылась в браузере</div></a>
+  <a href="https://github.com/alshfu/AutoVPN/releases/latest/download/autovpn-linux-amd64">
+    <div class="os">🐧 Linux x64</div><div class="f">autovpn-linux-amd64 — панель на 127.0.0.1:2082</div></a>
+  <a href="https://github.com/alshfu/AutoVPN/releases/latest/download/autovpn-linux-arm64">
+    <div class="os">🐧 Linux arm64</div><div class="f">autovpn-linux-arm64 — Raspberry Pi, ARM-серверы</div></a>
+</div>
+<p class="note">Везде нужен <a style="color:var(--cyan)" href="https://sing-box.sagernet.org/">sing-box</a>:
+<code>brew install sing-box</code> · <code>winget install SagerNet.sing-box</code> · пакеты дистрибутива</p>
+
+<footer>
+  <a href="https://github.com/alshfu/AutoVPN">github.com/alshfu/AutoVPN</a> · MIT ·
+  используйте VPN в соответствии с законами вашей страны
+</footer>
+
+</div>
+</body>
+</html>

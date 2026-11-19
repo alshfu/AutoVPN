@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build macOS app
+        run: |
+          cd macos
+          ./scripts/build-app.sh
+          ditto -c -k --keepParent dist/AutoVPN.app ../AutoVPN.app.zip
+
+      - name: Build Go binaries
+        run: |
+          cd desktop
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H windowsgui" -o ../autovpn-windows-amd64.exe .
+          GOOS=linux   GOARCH=amd64 go build -ldflags "-s -w" -o ../autovpn-linux-amd64 .
+          GOOS=linux   GOARCH=arm64 go build -ldflags "-s -w" -o ../autovpn-linux-arm64 .
+          GOOS=darwin  GOARCH=arm64 go build -ldflags "-s -w" -o ../autovpn-darwin-arm64 .
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            AutoVPN.app.zip \
+            autovpn-windows-amd64.exe \
+            autovpn-linux-amd64 \
+            autovpn-linux-arm64 \
+            autovpn-darwin-arm64 \
+            --title "AutoVPN $GITHUB_REF_NAME" \
+            --generate-notes

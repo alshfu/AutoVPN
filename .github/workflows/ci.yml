@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    name: Go client (Windows/Linux/macOS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: gofmt
+        run: test -z "$(gofmt -l desktop)"
+      - name: vet
+        run: cd desktop && go vet ./...
+      - name: build all targets
+        run: |
+          cd desktop
+          GOOS=linux   GOARCH=amd64 go build -o /dev/null .
+          GOOS=linux   GOARCH=arm64 go build -o /dev/null .
+          GOOS=windows GOARCH=amd64 go build -o /dev/null .
+          GOOS=darwin  GOARCH=arm64 go build -o /dev/null .
+
+  macos:
+    name: macOS app (Swift)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift build
+        run: cd macos && swift build
