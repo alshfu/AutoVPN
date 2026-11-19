@@ -69,8 +69,18 @@ final class Engine {
     // ------------------------------------------------------------ sing-box
 
     private var singboxPath: String? {
-        ["/opt/homebrew/bin/sing-box", "/opt/homebrew/opt/sing-box/bin/sing-box",
-         "/usr/local/bin/sing-box"].first { FileManager.default.fileExists(atPath: $0) }
+        var candidates: [String] = []
+        // 1) рядом с AutoVPN внутри .app (бандл)
+        if let exe = Bundle.main.executableURL {
+            candidates.append(exe.deletingLastPathComponent().appendingPathComponent("sing-box").path)
+        }
+        // 2) системный (brew) — для разработки из исходников
+        candidates += [
+            "/opt/homebrew/bin/sing-box",
+            "/opt/homebrew/opt/sing-box/bin/sing-box",
+            "/usr/local/bin/sing-box",
+        ]
+        return candidates.first { FileManager.default.fileExists(atPath: $0) }
     }
 
     private func outboundDict(_ c: Channel) -> [String: Any] {
@@ -135,7 +145,10 @@ final class Engine {
     /// только из q
     private func startLocked() {
         stopLocked()
-        guard let bin = singboxPath else { lastError = "sing-box не найден (brew install sing-box)"; return }
+        guard let bin = singboxPath else {
+            lastError = "sing-box не найден — пересобери приложение (scripts/build-app.sh) или brew install sing-box"
+            return
+        }
         guard let cfg = writeConfig() else { lastError = "нет каналов — добавь подписку"; return }
         // осиротевший sing-box с нашим конфигом держит порты — убрать
         run("/usr/bin/pkill", ["-f", "sing-box run -c \(cfg.path)"], timeout: 5)

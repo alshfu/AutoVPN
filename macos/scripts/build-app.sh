@@ -1,13 +1,25 @@
 #!/bin/bash
-# Собирает AutoVPN.app в ./dist (ad-hoc подпись).
+# Собирает AutoVPN.app в ./dist (ad-hoc подпись) со встроенным sing-box.
 set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$(dirname "$0")/.."
 
 swift build -c release
 
+ARCH="$(uname -m)"
+case "$ARCH" in
+  arm64) GOARCH=arm64 ;;
+  x86_64) GOARCH=amd64 ;;
+  *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
+esac
+
+SINGBOX_DIR="$(mktemp -d)"
+trap 'rm -rf "$SINGBOX_DIR"' EXIT
+"$ROOT/scripts/fetch-singbox.sh" darwin "$GOARCH" "$SINGBOX_DIR"
+
 APP=dist/AutoVPN.app
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -30,5 +42,15 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 PLIST
 
 cp .build/release/AutoVPN "$APP/Contents/MacOS/AutoVPN"
+cp "$SINGBOX_DIR/sing-box" "$APP/Contents/MacOS/sing-box"
+chmod +x "$APP/Contents/MacOS/sing-box"
+if [[ -f "$SINGBOX_DIR/sing-box-LICENSE" ]]; then
+  cp "$SINGBOX_DIR/sing-box-LICENSE" "$APP/Contents/Resources/sing-box-LICENSE"
+fi
+if [[ -f "$SINGBOX_DIR/sing-box.version" ]]; then
+  cp "$SINGBOX_DIR/sing-box.version" "$APP/Contents/Resources/sing-box.version"
+fi
+
+codesign --force -s - "$APP/Contents/MacOS/sing-box"
 codesign --force -s - "$APP"
-echo "OK: $APP"
+echo "OK: $APP (sing-box bundled)"

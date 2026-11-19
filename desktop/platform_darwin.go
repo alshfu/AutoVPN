@@ -10,7 +10,7 @@ import (
 )
 
 const singboxBinName = "sing-box"
-const singboxInstallHint = "brew install sing-box"
+const singboxInstallHint = "brew install sing-box / пересобери с fetch-singbox.sh"
 
 var singboxCandidates = []string{
 	"/opt/homebrew/bin/sing-box", "/opt/homebrew/opt/sing-box/bin/sing-box",

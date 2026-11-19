@@ -59,6 +59,15 @@ func (e *Engine) singboxPath() string {
 	if e.settings.SingboxPath != "" {
 		return e.settings.SingboxPath
 	}
+	// 1) рядом с бинарником (zip-релиз / рядом положили)
+	if p := siblingSingbox(); p != "" {
+		return p
+	}
+	// 2) встроенный в AutoVPN (извлечётся в supportDir/bin)
+	if p := ensureBundledSingbox(); p != "" {
+		return p
+	}
+	// 3) PATH и типичные пути системы
 	if p, err := exec.LookPath(singboxBinName); err == nil {
 		return p
 	}
@@ -163,7 +172,7 @@ func (e *Engine) startLocked() {
 	e.stopLocked()
 	bin := e.singboxPath()
 	if bin == "" {
-		e.lastError = "sing-box не найден — установи его (" + singboxInstallHint + ")"
+		e.lastError = "sing-box не найден — пересобери с scripts/fetch-singbox.sh или установи отдельно (" + singboxInstallHint + ")"
 		return
 	}
 	cfg := e.writeConfigLocked()

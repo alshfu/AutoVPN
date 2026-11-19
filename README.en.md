@@ -35,7 +35,7 @@ subscriptions ──► filter (tls/reality only) ──► sample up to 400
 
 | | macOS (`macos/`) | Windows / Linux (`desktop/`) |
 |---|---|---|
-| What it is | Native menu-bar app | Single dependency-free binary |
+| What it is | Native menu-bar app | Single binary (sing-box bundled) |
 | UI | SwiftUI popover at the ⚡ icon | Neon web panel at `127.0.0.1:2082` |
 | Language | Swift | Go (pure stdlib) |
 | System proxy | one click (networksetup) | one click (WinINET registry / gsettings) |
@@ -55,11 +55,8 @@ Same engine everywhere: sing-box with a urltest group, liveness read from each p
 
 ## Install
 
-[sing-box](https://sing-box.sagernet.org/) is required everywhere:
-
-- macOS: `brew install sing-box`
-- Windows: `winget install SagerNet.sing-box` (or drop `sing-box.exe` next to `autovpn.exe`)
-- Linux: [sing-box packages](https://sing-box.sagernet.org/installation/package-managers/)
+The [sing-box](https://sing-box.sagernet.org/) engine is **bundled** in release builds — no separate install.
+(Engine license: GPL-3.0-or-later.)
 
 ### macOS (menu-bar app)
 
@@ -68,7 +65,7 @@ Grab `AutoVPN.app.zip` from [Releases](../../releases) (ad-hoc signed — on fir
 ```bash
 git clone https://github.com/alshfu/AutoVPN.git
 cd AutoVPN/macos
-./scripts/build-app.sh
+./scripts/build-app.sh          # downloads sing-box into the .app
 cp -R dist/AutoVPN.app ~/Applications/
 open ~/Applications/AutoVPN.app
 ```
@@ -85,7 +82,17 @@ chmod +x autovpn-linux-amd64
 ./autovpn-linux-amd64        # panel: http://127.0.0.1:2082
 ```
 
-`autovpn-linux-arm64` is there too (Raspberry Pi, ARM servers). From source: `cd desktop && go build`.
+`autovpn-linux-arm64` is there too (Raspberry Pi, ARM servers).
+
+Build the Go client from source with a bundled engine:
+
+```bash
+cd desktop
+../scripts/fetch-singbox.sh "$(go env GOOS)" "$(go env GOARCH)" third_party
+go build
+```
+
+Without `fetch-singbox.sh` the binary falls back to a system `sing-box` (Homebrew / distro packages).
 
 ## Usage
 

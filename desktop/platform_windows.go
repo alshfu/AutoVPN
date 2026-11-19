@@ -12,7 +12,7 @@ import (
 )
 
 const singboxBinName = "sing-box.exe"
-const singboxInstallHint = "scoop install sing-box / winget install SagerNet.sing-box, или положи sing-box.exe рядом с autovpn.exe"
+const singboxInstallHint = "winget install SagerNet.sing-box / положи sing-box.exe рядом / пересобери с fetch-singbox.sh"
 
 var singboxCandidates = []string{
 	`C:\sing-box\sing-box.exe`,

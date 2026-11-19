@@ -35,7 +35,7 @@
 
 | | macOS (`macos/`) | Windows / Linux (`desktop/`) |
 |---|---|---|
-| Что это | Нативное menu-bar приложение | Один бинарник без зависимостей |
+| Что это | Нативное menu-bar приложение | Один бинарник (sing-box внутри) |
 | UI | SwiftUI-попап у иконки ⚡ | Неоновая веб-панель на `127.0.0.1:2082` |
 | Язык | Swift | Go (чистый stdlib) |
 | Системный прокси | кнопка (networksetup) | кнопка (реестр WinINET / gsettings) |
@@ -55,11 +55,8 @@
 
 ## Установка
 
-Везде нужен [sing-box](https://sing-box.sagernet.org/):
-
-- macOS: `brew install sing-box`
-- Windows: `winget install SagerNet.sing-box` (или положи `sing-box.exe` рядом с `autovpn.exe`)
-- Linux: [пакеты sing-box](https://sing-box.sagernet.org/installation/package-managers/)
+Движок [sing-box](https://sing-box.sagernet.org/) **встроен** в релизы — отдельно ставить ничего не нужно.
+(Лицензия ядра: GPL-3.0-or-later.)
 
 ### macOS (menu-bar приложение)
 
@@ -68,7 +65,7 @@
 ```bash
 git clone https://github.com/alshfu/AutoVPN.git
 cd AutoVPN/macos
-./scripts/build-app.sh
+./scripts/build-app.sh          # сам скачает sing-box в бандл
 cp -R dist/AutoVPN.app ~/Applications/
 open ~/Applications/AutoVPN.app
 ```
@@ -85,7 +82,17 @@ chmod +x autovpn-linux-amd64
 ./autovpn-linux-amd64        # панель: http://127.0.0.1:2082
 ```
 
-Есть и `autovpn-linux-arm64` (Raspberry Pi, ARM-серверы). Сборка из исходников: `cd desktop && go build`.
+Есть и `autovpn-linux-arm64` (Raspberry Pi, ARM-серверы).
+
+Сборка Go-клиента из исходников со встроенным ядром:
+
+```bash
+cd desktop
+../scripts/fetch-singbox.sh "$(go env GOOS)" "$(go env GOARCH)" third_party
+go build
+```
+
+Без `fetch-singbox.sh` бинарник ищет системный `sing-box` (brew / пакеты дистрибутива).
 
 ## Как пользоваться
 
@@ -107,7 +114,7 @@ chmod +x autovpn-linux-amd64
 
 ## English
 
-**Self-healing VPN client for macOS, Windows and Linux.** Feed it VLESS subscription URLs — it filters junk, probes every server, connects through the fastest one and keeps healing itself: dead channels get pruned, and when fewer than 4 remain alive it re-fetches your subscriptions automatically. Two native clients, one engine: a Swift menu-bar app for macOS and a single dependency-free Go binary with a neon web panel for Windows/Linux, both powered by [sing-box](https://sing-box.sagernet.org/). System-wide proxy toggle, autostart, built-in top-5 public subscription presets. MIT.
+**Self-healing VPN client for macOS, Windows and Linux.** Feed it VLESS subscription URLs — it filters junk, probes every server, connects through the fastest one and keeps healing itself: dead channels get pruned, and when fewer than 4 remain alive it re-fetches your subscriptions automatically. Two native clients, one engine: a Swift menu-bar app for macOS and a Go binary with a neon web panel for Windows/Linux, both shipping with a bundled [sing-box](https://sing-box.sagernet.org/) engine. System-wide proxy toggle, autostart, built-in top-5 public subscription presets. MIT (engine: GPL-3.0).
 
 ## Лицензия
 

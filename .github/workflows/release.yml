@@ -17,19 +17,31 @@ jobs:
         with:
           go-version: "1.22"
 
-      - name: Build macOS app
+      - name: Build macOS app (with bundled sing-box)
         run: |
           cd macos
           ./scripts/build-app.sh
           ditto -c -k --keepParent dist/AutoVPN.app ../AutoVPN.app.zip
 
-      - name: Build Go binaries
+      - name: Build Go binaries (with embedded sing-box)
         run: |
+          set -euo pipefail
+          ROOT="$PWD"
+          fetch() { "$ROOT/scripts/fetch-singbox.sh" "$1" "$2" "$ROOT/desktop/third_party"; }
+
           cd desktop
+
+          fetch windows amd64
           GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H windowsgui" -o ../autovpn-windows-amd64.exe .
-          GOOS=linux   GOARCH=amd64 go build -ldflags "-s -w" -o ../autovpn-linux-amd64 .
-          GOOS=linux   GOARCH=arm64 go build -ldflags "-s -w" -o ../autovpn-linux-arm64 .
-          GOOS=darwin  GOARCH=arm64 go build -ldflags "-s -w" -o ../autovpn-darwin-arm64 .
+
+          fetch linux amd64
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o ../autovpn-linux-amd64 .
+
+          fetch linux arm64
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o ../autovpn-linux-arm64 .
+
+          fetch darwin arm64
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o ../autovpn-darwin-arm64 .
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/')

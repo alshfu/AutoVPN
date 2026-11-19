@@ -3,3 +3,10 @@ dist/
 .DS_Store
 *.xcodeproj
 .swiftpm/
+index.html
+screenshot-desktop.png
+screenshot.png
+desktop/third_party/sing-box
+desktop/third_party/sing-box.exe
+desktop/third_party/sing-box-LICENSE
+desktop/third_party/sing-box.version

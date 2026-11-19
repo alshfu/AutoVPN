@@ -11,7 +11,7 @@ import (
 )
 
 const singboxBinName = "sing-box"
-const singboxInstallHint = "см. https://sing-box.sagernet.org/installation/package-managers/"
+const singboxInstallHint = "https://sing-box.sagernet.org/installation/ — или пересобери с fetch-singbox.sh"
 
 var singboxCandidates = []string{
 	"/usr/local/bin/sing-box", "/usr/bin/sing-box", "/opt/sing-box/sing-box",
