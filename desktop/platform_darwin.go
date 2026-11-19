@@ -20,6 +20,16 @@ var singboxCandidates = []string{
 func hideWindow(cmd *exec.Cmd) {}
 
 func activeService() string {
+	if svc := serviceForDefaultRoute(); svc != "" && !isVirtualService(svc) {
+		return svc
+	}
+	if svc := firstLivePhysicalService(); svc != "" {
+		return svc
+	}
+	return serviceForDefaultRoute()
+}
+
+func serviceForDefaultRoute() string {
 	out, _ := exec.Command("/sbin/route", "-n", "get", "default").Output()
 	dev := ""
 	for _, l := range strings.Split(string(out), "\n") {
@@ -39,6 +49,56 @@ func activeService() string {
 		}
 	}
 	return ""
+}
+
+func firstLivePhysicalService() string {
+	type pair struct{ name, device string }
+	out, _ := exec.Command("/usr/sbin/networksetup", "-listallhardwareports").Output()
+	var pairs []pair
+	last := ""
+	for _, l := range strings.Split(string(out), "\n") {
+		l = strings.TrimSpace(l)
+		if strings.HasPrefix(l, "Hardware Port:") {
+			last = strings.TrimSpace(strings.TrimPrefix(l, "Hardware Port:"))
+		} else if strings.HasPrefix(l, "Device:") && last != "" {
+			pairs = append(pairs, pair{last, strings.TrimSpace(strings.TrimPrefix(l, "Device:"))})
+			last = ""
+		}
+	}
+	prefer := []string{"Wi-Fi", "Ethernet", "USB 10/100/1000 LAN", "USB 10/100 LAN"}
+	for _, want := range prefer {
+		for _, p := range pairs {
+			if p.name == want && interfaceHasIP(p.device) {
+				return p.name
+			}
+		}
+	}
+	for _, p := range pairs {
+		if strings.HasPrefix(p.device, "en") && interfaceHasIP(p.device) && !isVirtualService(p.name) {
+			return p.name
+		}
+	}
+	for _, p := range pairs {
+		if p.name == "Wi-Fi" {
+			return p.name
+		}
+	}
+	return ""
+}
+
+func interfaceHasIP(device string) bool {
+	out, err := exec.Command("/usr/sbin/ipconfig", "getifaddr", device).Output()
+	return err == nil && strings.TrimSpace(string(out)) != ""
+}
+
+func isVirtualService(name string) bool {
+	n := strings.ToLower(name)
+	for _, k := range []string{"v2ray", "v2box", "tailscale", "utun", "vpn", "wireguard", "tunnel", "cisco", "l2tp"} {
+		if strings.Contains(n, k) {
+			return true
+		}
+	}
+	return false
 }
 
 func setSystemProxy(on bool, proxyPort int) error {

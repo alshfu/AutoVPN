@@ -17,6 +17,8 @@ struct EngineSnapshot {
     var subs: [SubEntry] = []
     var systemProxyOn = false
     var skipRU = true
+    /// чужой VPN перехватывает default route (V2Box / v2RayTun / …)
+    var vpnConflict = ""
 }
 
 /// Принцип: подписка -> отсев -> sing-box -> самый быстрый -> самолечение.
@@ -55,10 +57,18 @@ final class Engine {
         s.subs = settings.subscriptions
         s.systemProxyOn = settings.systemProxyOn
         s.skipRU = settings.skipRU
+        s.vpnConflict = SystemProxy.conflictingVPN() ?? ""
         DispatchQueue.main.async { self.onChange?(s) }
     }
 
     func poke() { q.async { self.changed() } }
+
+    func reportError(_ msg: String) {
+        q.async {
+            self.lastError = msg
+            self.changed()
+        }
+    }
 
     private func saveChannels() {
         if let d = try? JSONEncoder().encode(channels) {
@@ -80,7 +90,32 @@ final class Engine {
             "/opt/homebrew/opt/sing-box/bin/sing-box",
             "/usr/local/bin/sing-box",
         ]
-        return candidates.first { FileManager.default.fileExists(atPath: $0) }
+        guard let path = candidates.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
+            return nil
+        }
+        // GitHub zip → Gatekeeper вешает quarantine на вложенный бинарник
+        clearQuarantine(path)
+        return path
+    }
+
+    private func clearQuarantine(_ path: String) {
+        let url = URL(fileURLWithPath: path)
+        let values = try? url.resourceValues(forKeys: [.quarantinePropertiesKey])
+        if values?.quarantineProperties != nil {
+            var mutable = url
+            try? mutable.setResourceValues({
+                var v = URLResourceValues()
+                v.quarantineProperties = nil
+                return v
+            }())
+            log("снял quarantine с \(path)")
+        }
+        // на всякий: xattr (resourceValues иногда не снимает со всех флагов)
+        _ = run("/usr/bin/xattr", ["-d", "com.apple.quarantine", path], timeout: 3)
+        let bundlePath = Bundle.main.bundleURL.path
+        if bundlePath.hasSuffix(".app") {
+            _ = run("/usr/bin/xattr", ["-dr", "com.apple.quarantine", bundlePath], timeout: 5)
+        }
     }
 
     private func outboundDict(_ c: Channel) -> [String: Any] {

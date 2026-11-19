@@ -103,6 +103,12 @@ go build
 
 Прокси вручную: `curl --proxy socks5h://127.0.0.1:2080 https://api.ipify.org`
 
+### Если «ПОДКЛЮЧЕНО», а сайты не открываются
+
+1. Включи кнопку **СИСТ. ПРОКСИ** — без неё браузер не идёт через AutoVPN (это SOCKS, не Network Extension).
+2. Отключи **V2Box / v2RayTun / другой VPN** — они перехватывают default route, и трафик мимо AutoVPN.
+3. После скачивания с GitHub: правый клик → «Открыть», либо `xattr -dr com.apple.quarantine AutoVPN.app`.
+
 ## Под капотом
 
 - Принимаются только `vless://` с `security=tls|reality` — остальное отбрасывается, включая RU-выходы (опция)

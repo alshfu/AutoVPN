@@ -131,6 +131,16 @@ struct RootView: View {
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundColor(Neon.red)
                         .lineLimit(2)
+                } else if !model.s.vpnConflict.isEmpty {
+                    Text("⚠ отключи \(model.s.vpnConflict) — он перехватывает трафик")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(Neon.amber)
+                        .lineLimit(2)
+                } else if model.s.running && !model.s.systemProxyOn {
+                    Text("включи «СИСТ. ПРОКСИ» чтобы браузер шёл через VPN")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(Neon.amber)
+                        .lineLimit(2)
                 }
             }
             Spacer()
@@ -180,9 +190,17 @@ struct RootView: View {
         HStack(spacing: 10) {
             neonToggle("СИСТ. ПРОКСИ", on: model.s.systemProxyOn) {
                 let want = !model.s.systemProxyOn
+                let conflict = model.s.vpnConflict
                 DispatchQueue.global().async {
-                    if SystemProxy.set(on: want) { Engine.shared.setSystemProxyFlag(want) }
-                    else { Engine.shared.poke() }
+                    if !conflict.isEmpty && want {
+                        Engine.shared.reportError("сначала отключи \(conflict)")
+                        return
+                    }
+                    if SystemProxy.set(on: want) {
+                        Engine.shared.setSystemProxyFlag(want)
+                    } else {
+                        Engine.shared.reportError("не удалось \(want ? "включить" : "выключить") системный прокси")
+                    }
                 }
             }
             neonToggle("АВТОЗАПУСК", on: model.loginItem) {

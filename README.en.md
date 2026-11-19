@@ -103,6 +103,12 @@ Without `fetch-singbox.sh` the binary falls back to a system `sing-box` (Homebre
 
 Manual: `curl --proxy socks5h://127.0.0.1:2080 https://api.ipify.org`
 
+### Connected but sites don't load
+
+1. Turn on **СИСТ. ПРОКСИ** — without it the browser does not use AutoVPN (SOCKS, not a Network Extension).
+2. Disconnect **V2Box / v2RayTun / any other VPN** — they own the default route and bypass AutoVPN.
+3. After a GitHub download: right-click → Open, or `xattr -dr com.apple.quarantine AutoVPN.app`.
+
 ## Under the hood
 
 - Only `vless://` with `security=tls|reality` is accepted; RU exits are filtered (optional)
