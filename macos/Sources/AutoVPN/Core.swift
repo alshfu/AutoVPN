@@ -180,13 +180,28 @@ func run(_ cmd: String, _ args: [String], timeout: TimeInterval = 30) -> String 
     return String(data: data, encoding: .utf8) ?? ""
 }
 
+/// URLSession без системного SOCKS — иначе при включённом «СИСТ. ПРОКСИ»
+/// качание подписок идёт через наш же туннель и при мёртвых каналах ломается в ноль.
+let directSession: URLSession = {
+    let cfg = URLSessionConfiguration.ephemeral
+    cfg.timeoutIntervalForRequest = 35
+    cfg.timeoutIntervalForResource = 60
+    cfg.connectionProxyDictionary = [
+        "HTTPEnable": 0,
+        "HTTPSEnable": 0,
+        "SOCKSEnable": 0,
+        "ProxyAutoConfigEnable": 0,
+    ]
+    return URLSession(configuration: cfg)
+}()
+
 func httpGet(_ urlString: String, timeout: TimeInterval = 20, headers: [String: String] = [:]) -> Data? {
     guard let url = URL(string: urlString) else { return nil }
     var req = URLRequest(url: url, timeoutInterval: timeout)
     for (k, v) in headers { req.setValue(v, forHTTPHeaderField: k) }
     var result: Data?
     let sem = DispatchSemaphore(value: 0)
-    URLSession.shared.dataTask(with: req) { data, resp, _ in
+    directSession.dataTask(with: req) { data, resp, _ in
         if let r = resp as? HTTPURLResponse, (200..<300).contains(r.statusCode) { result = data }
         sem.signal()
     }.resume()

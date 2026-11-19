@@ -250,7 +250,8 @@ final class Engine {
         if let body { req.httpBody = try? JSONSerialization.data(withJSONObject: body) }
         var result: Data?
         let sem = DispatchSemaphore(value: 0)
-        URLSession.shared.dataTask(with: req) { data, resp, _ in
+        // localhost API — тоже через directSession, чтобы системный SOCKS не мешал
+        directSession.dataTask(with: req) { data, resp, _ in
             if let r = resp as? HTTPURLResponse, (200..<300).contains(r.statusCode) { result = data ?? Data() }
             sem.signal()
         }.resume()

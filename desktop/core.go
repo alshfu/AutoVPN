@@ -209,7 +209,14 @@ func parseVless(link string, existing map[string]bool, skipRU bool) *Channel {
 
 // ---------------------------------------------------------------- helpers
 
-var directClient = &http.Client{Timeout: 35 * time.Second}
+// Без ProxyFromEnvironment / системного прокси: иначе при включённом
+// системном SOCKS обновление подписок идёт через мёртвый туннель.
+var directClient = &http.Client{
+	Timeout: 35 * time.Second,
+	Transport: &http.Transport{
+		Proxy: func(*http.Request) (*url.URL, error) { return nil, nil },
+	},
+}
 
 func fetchSubscription(u string) []string {
 	resp, err := directClient.Get(u)
